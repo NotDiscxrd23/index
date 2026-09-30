@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZEN CORRUPT</title>
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent !important;
+  }
+
+  #zen-widget {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  #word {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: #fff;
+    font: 900 clamp(48px, 14vmin, 220px)/1 "Segoe UI", "Arial Black", Arial, sans-serif;
+    letter-spacing: .08em;
+    white-space: nowrap;
+    text-shadow:
+      0 0 4px #fff,
+      0 0 12px #e9c7ff,
+      0 0 28px #a855f7,
+      0 0 55px #7e22ce;
+    animation: idlePulse 3.5s ease-in-out infinite;
+  }
+
+  @keyframes idlePulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.18); }
+  }
+
+  /* Capas RGB magenta / cian */
+  #word::before,
+  #word::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    text-align: center;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    letter-spacing: inherit;
+  }
+  #word::before { color: #ff38e8; text-shadow: 3px 0 #ff38e8; mix-blend-mode: screen; }
+  #word::after  { color: #55f6ff; text-shadow: -3px 0 #55f6ff; mix-blend-mode: screen; }
+
+  #word.glitch { animation: corrupt 1.15s steps(1, end); }
+  #word.glitch::before { opacity: .9; animation: glitchPink 1.15s steps(1, end); }
+  #word.glitch::after  { opacity: .9; animation: glitchCyan 1.15s steps(1, end); }
+
+  @keyframes corrupt {
+    0%   { transform: translate(0) skew(0); filter: none; opacity: 1; clip-path: inset(0); }
+    8%   { transform: translate(-5px, 2px) skew(-12deg); filter: hue-rotate(90deg); }
+    11%  { clip-path: inset(0 0 60% 0); transform: translate(-14px, 0); }
+    13%  { clip-path: inset(0); transform: translate(6px, -2px) skew(15deg); }
+    19%  { transform: translate(-3px, 0) scaleX(1.12); filter: blur(1px); }
+    23%  { clip-path: inset(45% 0 20% 0); transform: translate(18px, 0); }
+    27%  { clip-path: inset(0); transform: translate(4px, 1px) skew(-8deg); opacity: .25; }
+    34%  { transform: translate(-7px, -1px); opacity: 1; }
+    38%  { clip-path: inset(70% 0 0 0); transform: translate(-16px, 3px); }
+    42%  { clip-path: inset(0); transform: translate(5px, 0) scaleX(.88); filter: blur(2px); }
+    49%  { transform: translate(0) skew(0); opacity: .15; }
+    52%  { clip-path: inset(15% 0 55% 0); transform: translate(12px, 0); opacity: 1; }
+    57%  { clip-path: inset(0); transform: translate(3px, -2px); }
+    65%  { transform: translate(-2px, 1px) skew(7deg); }
+    74%  { transform: translate(0) scaleX(1.04); filter: none; }
+    84%  { transform: translate(1px, 0); }
+    100% { transform: translate(0) skew(0); filter: none; opacity: 1; clip-path: inset(0); }
+  }
+
+  @keyframes glitchPink {
+    0%, 100% { clip-path: inset(0 0 100% 0); transform: translateX(0); }
+    10% { clip-path: inset(10% 0 65% 0); transform: translateX(-9px); }
+    22% { clip-path: inset(55% 0 25% 0); transform: translateX(7px); }
+    37% { clip-path: inset(25% 0 55% 0); transform: translateX(-12px); }
+    51% { clip-path: inset(75% 0 8% 0);  transform: translateX(5px); }
+    66% { clip-path: inset(40% 0 42% 0); transform: translateX(-5px); }
+    82% { clip-path: inset(8% 0 78% 0);  transform: translateX(3px); }
+  }
+
+  @keyframes glitchCyan {
+    0%, 100% { clip-path: inset(100% 0 0 0); transform: translateX(0); }
+    12% { clip-path: inset(65% 0 10% 0); transform: translateX(10px); }
+    25% { clip-path: inset(15% 0 65% 0); transform: translateX(-8px); }
+    39% { clip-path: inset(45% 0 35% 0); transform: translateX(12px); }
+    53% { clip-path: inset(5% 0 75% 0);  transform: translateX(-5px); }
+    70% { clip-path: inset(70% 0 12% 0); transform: translateX(6px); }
+    85% { clip-path: inset(30% 0 50% 0); transform: translateX(-3px); }
+  }
+
+  #snow {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3;
+    background: transparent;
+  }
+</style>
+</head>
+<body>
+<div id="zen-widget">
+  <canvas id="snow"></canvas>
+  <div id="word" data-text="ZEN">ZEN</div>
+</div>
+
+<script>
+  const word = document.getElementById("word");
+  const canvas = document.getElementById("snow");
+  const ctx = canvas.getContext("2d");
+
+  const words = ["ZEN", "Roblox"];
+  const INTERVAL_MS = 7000;
+
+  let index = 0;
+  let flakes = [];
+  let width = 0, height = 0;
+  let lastFrame = 0;
+  let changing = false;
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = rect.width || window.innerWidth;
+    height = rect.height || window.innerHeight;
+
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const count = Math.max(30, Math.min(90, Math.round(width * height / 18000)));
+    flakes = Array.from({ length: count }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: 0.8 + Math.random() * 2.6,
+      speed: 12 + Math.random() * 25,
+      drift: (Math.random() - 0.5) * 13,
+      alpha: 0.3 + Math.random() * 0.7
+    }));
+  }
+
+  function drawSnow(time) {
+    const dt = lastFrame ? Math.min((time - lastFrame) / 1000, 0.04) : 0.016;
+    lastFrame = time;
+    ctx.clearRect(0, 0, width, height);
+
+    for (const f of flakes) {
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(225, 195, 255, ${f.alpha})`;
+      ctx.shadowColor = "#bd70ff";
+      ctx.shadowBlur = f.r * 4;
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      f.y += f.speed * dt;
+      f.x += f.drift * dt;
+
+      if (f.y > height + 5) { f.y = -5; f.x = Math.random() * width; }
+      if (f.x < -5) f.x = width + 5;
+      if (f.x > width + 5) f.x = -5;
+    }
+    ctx.shadowBlur = 0;
+    requestAnimationFrame(drawSnow);
+  }
+
+  function changeWord() {
+    if (changing) return;
+    changing = true;
+
+    word.dataset.text = word.textContent;
+    word.classList.remove("glitch");
+    void word.offsetWidth;
+    word.classList.add("glitch");
+
+    setTimeout(() => {
+      index = (index + 1) % words.length;
+      word.textContent = words[index];
+      word.dataset.text = words[index];
+    }, 580);
+
+    setTimeout(() => {
+      word.classList.remove("glitch");
+      changing = false;
+    }, 1200);
+  }
+
+  resize();
+  window.addEventListener("resize", resize);
+  requestAnimationFrame(drawSnow);
+  setInterval(changeWord, INTERVAL_MS);
+</script>
+</body>
+</html>
